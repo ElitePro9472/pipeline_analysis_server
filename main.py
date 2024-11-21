@@ -52,6 +52,9 @@ async def serve_static_files(file_path: str):
     # If no matching file or API route found, return 404
     return {"detail": "Not Found"}
 
+@app.get("/")
+async def serve_react_app():
+    return FileResponse(os.path.join(build_path, "index.html"))
 
 @app.post("/api/upload_csv")
 async def upload_files(files: List[UploadFile] = File(...)):
@@ -88,7 +91,7 @@ def get_pipeline_data(startDate: str, endDate: str, dataFile: str, historyFile: 
     opportunity_history = opportunity_history.dropna(subset=['Last Modified', 'Close Date'])
 
     # Ensure 'Net-New Dollars' is numeric
-    opportunity_data['Net-New Dollars'] = pd.to_numeric(opportunity_data['Net-New Dollars'].replace(r'[\$,]', '', regex=True))
+    opportunity_data['Net-New Dollars'] = pd.to_numeric(opportunity_data['Net-New Dollars'].replace('[\$,]', '', regex=True))
 
     str_field = ['Account Name', 'Created Date','Discovery Date','Close Date', 'Opportunity Name', 'Opportunity Owner', 'Stage','Lead Source','Opportunity Source','Type','Primary ERP','Lost Reason','SQL Quarter','Closed Quarter']
     num_field = ['Age','Net-New Dollars']
