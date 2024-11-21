@@ -36,10 +36,22 @@ os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 class PipelineInput(BaseModel):
     startDate: str
     endDate:str
+    
+@app.get("/{file_path:path}")
+async def serve_static_files(file_path: str):
+    full_path = os.path.join(build_path, file_path)
 
-@app.get("/")
-async def serve_react_app():
-    return FileResponse(os.path.join(build_path, "index.html"))
+    # Check if the file exists and is a static file
+    if os.path.exists(full_path) and os.path.isfile(full_path):
+        return FileResponse(full_path)
+
+    # Fallback to index.html only for non-API routes
+    if not file_path.startswith("api/"):
+        return FileResponse(os.path.join(build_path, "index.html"))
+
+    # If no matching file or API route found, return 404
+    return {"detail": "Not Found"}
+
 
 @app.post("/api/upload_csv")
 async def upload_files(files: List[UploadFile] = File(...)):
