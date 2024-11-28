@@ -13,6 +13,7 @@ import json
 from pandas import isnull
 
 import os
+
 app = FastAPI()
 
 # Path to the React build folder
@@ -20,6 +21,8 @@ build_path = os.path.join(os.path.dirname(__file__), "build")
 
 # Serve the static files from the React build folder
 app.mount("/static", StaticFiles(directory=os.path.join(build_path, "static")), name="static")
+
+DOWNLOAD_DIRECTORY = 'downloads'
 
 
 app.add_middleware(
@@ -36,6 +39,17 @@ os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 class PipelineInput(BaseModel):
     startDate: str
     endDate:str
+
+class RegisterInput(BaseModel):
+    firstName: str
+    lastName: str
+    email: str
+    password: str
+
+@app.post("/api/register")
+async def user_register(userData: RegisterInput):
+    print(userData)
+    return
 
 @app.post("/api/upload_csv")
 async def upload_files(files: List[UploadFile] = File(...)):
@@ -279,6 +293,17 @@ def get_pipeline_data(startDate: str, endDate: str, dataFile: str, historyFile: 
     values = [round(num, 2) for num in values]
 
     return {"table_data":table_data, "values":values}
+
+
+@app.get('/api/downloadPipeline')
+def download_Pipeline():
+    headers = {'Access-Control-Expose-Headers': 'Content-Disposition'}
+    return FileResponse("downloads/pipeline.csv", filename="pipeline.csv", headers=headers)
+
+@app.get('/api/downloadHistory')
+def download_History():
+    headers = {'Access-Control-Expose-Headers': 'Content-Disposition'}
+    return FileResponse("downloads/history_template.csv", filename="history_template.csv", headers=headers)
 
 @app.get("/{file_path:path}")
 async def serve_static_files(file_path: str):
