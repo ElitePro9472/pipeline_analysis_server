@@ -33,6 +33,11 @@ app.add_middleware(
 UPLOAD_DIRECTORY = "./uploads"
 os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
+class RegisterInput(BaseModel):
+    name: str
+    email: str
+    password: str
+    
 class PipelineInput(BaseModel):
     startDate: str
     endDate:str
@@ -294,3 +299,4 @@ async def serve_static_files(file_path: str):
 
     # If no matching file or API route found, return 404
     return {"detail": "Not Found"}
+
