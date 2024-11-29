@@ -1,5 +1,5 @@
-from typing import List
-from fastapi import FastAPI, Form, File, UploadFile
+from typing import List, Annotated
+from fastapi import FastAPI, Form, File, UploadFile, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,10 +11,14 @@ from PIL import Image
 from pydantic import BaseModel
 import json
 from pandas import isnull
+import models
+from sqlalchemy.orm import Session
+from database import engine, SessionLocal
 
 import os
 
 app = FastAPI()
+models.Base.metadata.create_all(bind=engine)
 
 # Path to the React build folder
 build_path = os.path.join(os.path.dirname(__file__), "build")
@@ -50,10 +54,22 @@ class RegisterInput(BaseModel):
     lastName: str
     email: str
     password: str
+    
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+        
+db_dependency = Annotated[Session, Depends(get_db)]
 
 @app.post("/api/register")
-async def user_register(userData: RegisterInput):
-    print(userData)
+async def user_register(userData: RegisterInput, db: db_dependency):
+    db_user = models.Users(name=userData.firstName+' '+userData.lastName, password=userData.password)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
     return
 
 @app.post("/api/upload_csv")
